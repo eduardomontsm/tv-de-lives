@@ -184,12 +184,13 @@ async function enrich(items, merge){
     const r=await api('channels',{part:'snippet,statistics',id:need.slice(i,i+50).join(',')});units(1);
     (r.items||[]).forEach(c=>{catalog[c.id]={...(catalog[c.id]||{}),id:c.id,name:c.snippet.title,handle:c.snippet.customUrl||'',country:c.snippet.country||'',lang:c.snippet.defaultLanguage||'',subs:c.statistics.hiddenSubscriberCount?-1:+(c.statistics.subscriberCount||0),upd:Date.now()}});
   }
-  const isBR=f=>{const c=catalog[f.ch]||{};return c.country==='BR'||/^pt/i.test(f.lang||'')||/^pt/i.test(c.lang||'')};
+  // Brasil: país do canal = BR; sem país declarado, aceita se o idioma for pt (exceto pt-PT)
+  const isBR=f=>{const c=catalog[f.ch]||{};if(c.country)return c.country==='BR';const l=(f.lang||c.lang||'').toLowerCase();return /^pt/.test(l)&&l!=='pt-pt'};
   let fresh=ids.map(i=>byId[i]).filter(f=>f.live&&isBR(f));
   fresh.forEach(f=>{const c=catalog[f.ch];if(c){c.tags=[...new Set([...(c.tags||[]),...(f.tags||[]),YT_CATS[f.cat]].filter(Boolean))];c.lastLive=Date.now();c.seen=(c.seen||0)+(merge?1:0)}});
   if(merge){const old=lives.filter(l=>!byId[l.id]);fresh=fresh.concat(old)}
   lives=fresh; LS.set('lives',lives); LS.set('catalog',catalog); LS.set('scanAt',Date.now());
-  status(`${lives.length} lives brasileiras no ar · ${Object.keys(catalog).length} canais no catálogo · buscas hoje: ${quota().s}/~100`);
+  status(`${lives.length} lives brasileiras no ar · ${Object.values(catalog).filter(c=>c.lastLive).length} canais BR no catálogo · buscas hoje: ${quota().s}/~100`);
   build();
 }
 
@@ -265,7 +266,7 @@ $('keyBtn').onclick=()=>{$('keyIn').value=KEY;$('keyDlg').showModal()};
 $('keyCancel').onclick=()=>$('keyDlg').close();
 $('keySave').onclick=()=>{KEY=$('keyIn').value.trim();LS.set('key',KEY);$('keyDlg').close()};
 $('exportCsv').onclick=()=>{
-  const rows=[['channel_id','nome','handle','pais','inscritos','temas','vezes_visto_ao_vivo','url']].concat(Object.values(catalog).map(c=>[c.id,c.name,c.handle,c.country,c.subs,(c.tags||[]).join(' | '),c.seen||0,'https://www.youtube.com/channel/'+c.id]));
+  const rows=[['channel_id','nome','handle','pais','inscritos','temas','vezes_visto_ao_vivo','url']].concat(Object.values(catalog).filter(c=>c.lastLive).map(c=>[c.id,c.name,c.handle,c.country,c.subs,(c.tags||[]).join(' | '),c.seen||0,'https://www.youtube.com/channel/'+c.id]));
   const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv'}));a.download='catalogo-tv-de-lives.csv';a.click();
 };
@@ -278,7 +279,7 @@ function confirmInline(msg){return window.confirm?confirm(msg):true}
 build();
 const age=Date.now()-LS.get('scanAt',0);
 if(!lives.length) scan(false).then(()=>tune(0)).catch(e=>status('Erro: '+e.message));
-else { status(`Snapshot de ${Math.round(age/6e4)} min atrás · ${Object.keys(catalog).length} canais no catálogo · buscas hoje: ${quota().s}/~100`); if(age>10*6e4) refresh().then(()=>tune(0)).catch(e=>status('Erro: '+e.message)); else tune(0); }
+else { status(`Snapshot de ${Math.round(age/6e4)} min atrás · ${Object.values(catalog).filter(c=>c.lastLive).length} canais BR no catálogo · buscas hoje: ${quota().s}/~100`); if(age>10*6e4) refresh().then(()=>tune(0)).catch(e=>status('Erro: '+e.message)); else tune(0); }
 </script>
 <script src="https://www.youtube.com/iframe_api"></script>
 </body>
