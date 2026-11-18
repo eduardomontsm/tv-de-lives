@@ -127,7 +127,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 // Sem chaves neste arquivo: a coleta roda no GitHub Actions e publica JSON no branch "data".
 const DATA = 'https://raw.githubusercontent.com/eduardomontsm/tv-de-lives/data/';
 const PLAT = {yt:'YouTube',tw:'Twitch',kk:'Kick'};
-const ICON={'Esportes':'⚽','Futebol':'🥅','Games':'🎮','Música':'🎵','Entretenimento':'🎬','Notícias':'📰','Educação':'📚','Ciência e Tecnologia':'🔬','Ciência':'🧬','Pessoas e Blogs':'🎙️','Podcasts':'🎧','Papo':'💬','Humor':'😂','Estilo e Culinária':'🍳','Animais e Natureza':'🌿','Viagem':'✈️','Fofoca':'🗞️','Religião':'🙏','Rádio 24h':'📻','Política':'🏛️','Economia':'📈','Reality':'🏠','React':'👀','Infantil':'🧸','Câmeras 24h':'📹','Filmes e Animação':'🎞️','Carros':'🚗','Causas':'🤝','Arte':'🎨','Twitch':'🟣'};
+const ICON={'Esportes':'⚽','Futebol':'🥅','Games':'🎮','Música':'🎵','Entretenimento':'🎬','Notícias':'📰','Educação':'📚','Ciência e Tecnologia':'🔬','Ciência':'🧬','Pessoas e Blogs':'🎙️','Podcasts':'🎧','Papo':'💬','Humor':'😂','Estilo e Culinária':'🍳','Animais e Natureza':'🌿','Viagem':'✈️','Fofoca':'🗞️','Religião':'🙏','Rádio 24h':'📻','Política':'🏛️','Economia':'📈','Reality':'🏠','React':'👀','Infantil':'🧸','Câmeras 24h':'📹','Filmes e Animação':'🎞️','Carros':'🚗','Causas':'🤝','Arte':'🎨','IRL':'📍','Twitch':'🟣'};
 const SIZES=[['Todas',0,Infinity],['Até 50',0,51],['50–500',51,501],['500–5 mil',501,5001],['+5 mil',5001,Infinity]];
 const SORTS=[['viewers','Mais vistos'],['small','Menores'],['recent','Recentes'],['random','Aleatório']];
 const ID_RE={yt:/^[\w-]{11}$/,tw:/^[a-z0-9_]{2,25}$/,kk:/^[a-z0-9_-]{1,40}$/};
