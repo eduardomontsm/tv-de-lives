@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://www.youtube.com https://s.ytimg.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.twitch.tv https://player.kick.com; img-src https: data:; connect-src https://raw.githubusercontent.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>TV de Lives — protótipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#1c130d;--wood1:#5a3219;--wood2:#7a4626;--wood3:#3d2010;
+  --cream:#e9dfc7;--cream2:#d6c9a8;--bake:#1b1714;--bake2:#2a241f;
+  --amber:#ffb23e;--orange:#e8742a;--phos:#8dff9c;--ink:#2a1f17;
+  --tt-bg:#000;--tt-y:#ffe600;--tt-c:#2ef2ff;--tt-w:#f4f4f4;--tt-g:#3dff5a;--tt-m:#ff4fd8;--tt-r:#ff3b3b;
+  --yt:#ff3b3b;--tw:#a970ff;--kk:#53fc18;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--wall);color:var(--cream);font-family:'Space Mono',ui-monospace,monospace}
+body{background:
+  radial-gradient(ellipse at 50% 0%,#3a2516 0%,transparent 60%),
+  repeating-linear-gradient(90deg,#20160f 0 22px,#1a110b 22px 44px)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit}
+.wrap{max-width:1440px;margin:0 auto;padding:14px 18px 28px;display:flex;flex-direction:column;gap:14px}
+
+/* ===== painel de filtros (placa creme com teclas de baquelite) ===== */
+.panel{background:linear-gradient(#efe6d0,#d9cdb0);color:var(--ink);border-radius:14px;padding:12px 16px;box-shadow:0 2px 0 #fff8 inset,0 -3px 0 #0002 inset,0 10px 30px #0008;border:1px solid #a8987a}
+.ptop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.brand{font-family:Bungee,sans-serif;font-size:24px;letter-spacing:.02em;color:var(--ink);display:flex;align-items:center;gap:10px;white-space:nowrap}
+.brand .badge{font-family:'Space Mono';font-size:10px;letter-spacing:.2em;border:1.5px solid var(--ink);padding:2px 6px;border-radius:4px}
+.brand em{font-style:normal;color:var(--orange)}
+.search{flex:1;min-width:220px;background:#111;color:var(--amber);border:3px solid #6d5f47;border-radius:8px;padding:9px 12px;font-family:VT323,monospace;font-size:21px;box-shadow:inset 0 0 12px #000}
+.search::placeholder{color:#a5772f}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed #a8987a}
+.lbl{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;width:96px;flex-shrink:0;color:#5b4a35}
+@media(max-width:640px){.lbl{width:100%}}
+.keys{display:flex;gap:8px;flex-wrap:wrap}
+/* tecla de baquelite */
+.key{position:relative;background:linear-gradient(#3a332c,#1b1714);color:var(--cream);border-radius:7px;padding:7px 12px 9px;font-size:12.5px;font-weight:700;letter-spacing:.03em;box-shadow:0 4px 0 #0b0907,0 6px 10px #0006,inset 0 1px 0 #ffffff22;transition:transform .06s,box-shadow .06s;white-space:nowrap}
+.key:hover{background:linear-gradient(#4a4138,#231e1a)}
+.key:active,.key.on{transform:translateY(3px);box-shadow:0 1px 0 #0b0907,0 2px 4px #0006,inset 0 2px 6px #000a}
+.key.on{background:linear-gradient(#2a241f,#14110e);color:var(--amber)}
+.key.on::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.key .c{opacity:.55;font-weight:400;margin-left:5px}
+.pdot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
+.p-yt{background:var(--yt)}.p-tw{background:var(--tw)}.p-kk{background:var(--kk)}
+.active{font-size:12px;color:#5b4a35;padding-top:6px;border-top:1px dashed #a8987a;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.active b{color:var(--ink)}
+.clear{color:var(--orange);text-decoration:underline;font-weight:700;font-size:12px}
+
+/* ===== sala: TV + guia ===== */
+.room{display:grid;grid-template-columns:1fr 400px;gap:16px;align-items:start}
+@media(max-width:1060px){.room{grid-template-columns:1fr}}
+
+/* gabinete de madeira */
+.tv{background:
+   repeating-linear-gradient(92deg,#ffffff06 0 2px,transparent 2px 9px),
+   repeating-linear-gradient(88deg,#00000018 0 1px,transparent 1px 14px),
+   linear-gradient(160deg,var(--wood2),var(--wood1) 45%,var(--wood3));
+  border-radius:30px;padding:22px;box-shadow:inset 0 2px 0 #ffffff22,inset 0 -6px 14px #0007,0 24px 50px #000c;position:relative}
+.tvbody{display:grid;grid-template-columns:1fr 150px;gap:18px}
+@media(max-width:700px){.tvbody{grid-template-columns:1fr}}
+.bezel{background:linear-gradient(#2b2520,#0f0c0a);border-radius:26px;padding:16px;box-shadow:inset 0 3px 10px #000,0 1px 0 #ffffff1a}
+.screen{position:relative;aspect-ratio:4/3;max-height:72vh;width:100%;border-radius:34px/28px;overflow:hidden;background:#050605;box-shadow:inset 0 0 60px #000,inset 0 0 6px #000}
+@supports not (aspect-ratio:4/3){.screen{height:56vw}}
+#player,#player iframe,#ext{position:absolute;inset:0;width:100%;height:100%;border:0}
+#ext{display:none;background:#000}
+/* camadas do CRT (não capturam clique) */
+.scan,.vignette,.glare{position:absolute;inset:0;pointer-events:none;z-index:5}
+.scan{background:repeating-linear-gradient(0deg,#0000 0 2px,#0000002e 2px 3px);mix-blend-mode:multiply}
+.vignette{background:radial-gradient(ellipse at center,transparent 58%,#000a 100%)}
+.glare{background:linear-gradient(135deg,#ffffff14 0%,transparent 35%);border-radius:inherit}
+.static{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:6;transition:opacity .2s;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='.9'/></svg>");background-color:#777}
+.static.on{opacity:1;animation:snow .12s steps(4) infinite}
+@keyframes snow{0%{background-position:0 0}25%{background-position:-60px 40px}50%{background-position:30px -70px}75%{background-position:-90px -20px}100%{background-position:50px 60px}}
+.screen.boot>*:not(.scan):not(.vignette):not(.glare){animation:boot .7s ease-out}
+@keyframes boot{0%{transform:scale(1,.004);filter:brightness(6)}45%{transform:scale(1,.004);filter:brightness(6)}75%{transform:scale(1,1);filter:brightness(1.8)}100%{filter:brightness(1)}}
+.osd{position:absolute;top:22px;left:26px;right:26px;display:flex;gap:16px;align-items:flex-start;pointer-events:none;opacity:0;transition:opacity .3s;z-index:7}
+.osd.show{opacity:1}
+.chnum{font-family:VT323,monospace;font-size:64px;line-height:.8;color:var(--phos);text-shadow:0 0 10px #5dff7a,3px 3px 0 #000}
+.osdbox{font-family:VT323,monospace;background:#000c;padding:6px 12px;border:2px solid var(--phos);color:var(--phos);max-width:620px;text-shadow:0 0 6px #5dff7a99}
+.osdbox b{display:block;font-size:26px;font-weight:400;line-height:1}
+.osdbox span{font-size:19px;line-height:1.05}
+.fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background-size:cover;background-position:center;z-index:2}
+.fallback.on{display:flex}
+.fallback::before{content:"";position:absolute;inset:0;background:#000c}
+.fallback>*{position:relative;text-align:center;max-width:520px;padding:0 20px;font-family:VT323,monospace;color:var(--amber)}
+.fallback b{font-size:34px;font-weight:400}
+.fallback p{font-size:21px}
+.btn-plat{display:inline-block;margin-top:10px;font-family:'Space Mono';font-weight:700;font-size:14px;color:#1b1714;text-decoration:none;background:linear-gradient(#ffc76b,var(--amber));padding:10px 18px;border-radius:8px;box-shadow:0 4px 0 #8a5a12}
+.empty-tv{position:absolute;inset:0;background:#050605;z-index:4;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font-family:VT323,monospace;font-size:28px;color:var(--phos);text-shadow:0 0 8px #5dff7a}
+
+/* plaquinha sob a tela */
+.plate{margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(#d8c48f,#a98d4f);color:#2a1f17;border-radius:8px;padding:7px 12px;box-shadow:inset 0 1px 0 #fff8,0 2px 4px #0006;font-size:12.5px}
+.plate .now{flex:1;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plate a{font-weight:700}
+
+/* painel lateral de controles */
+.controls{background:linear-gradient(#cfc6b0,#a99f87);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:12px;box-shadow:inset 0 2px 0 #fff7,inset 0 -3px 6px #0004;color:#2a1f17}
+@media(max-width:700px){.controls{flex-direction:row;flex-wrap:wrap;justify-content:center}}
+.clabel{font-size:9.5px;letter-spacing:.2em;font-weight:700;text-transform:uppercase;text-align:center}
+.knobwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.knob{width:96px;height:96px;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 35% 30%,#4a423a,#16120f 70%);box-shadow:0 6px 12px #0009,inset 0 2px 2px #ffffff30,0 0 0 6px #8c8170,0 0 0 7px #5d5446;
+  transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.knob::before{content:"";position:absolute;inset:12px;border-radius:50%;background:repeating-conic-gradient(#ffffff10 0 4deg,transparent 4deg 12deg)}
+.knob::after{content:"";position:absolute;left:50%;top:8px;width:6px;height:22px;margin-left:-3px;border-radius:3px;background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.knobbtns{display:flex;gap:6px}
+.mini{background:linear-gradient(#3a332c,#1b1714);color:var(--cream);width:40px;height:30px;border-radius:6px;font-weight:700;box-shadow:0 3px 0 #0b0907,inset 0 1px 0 #ffffff22;font-size:13px}
+.mini:active{transform:translateY(2px);box-shadow:0 1px 0 #0b0907}
+.pad{display:grid;grid-template-columns:repeat(3,36px);gap:6px}
+.pad button{height:30px;border-radius:50%/40%;background:linear-gradient(#f3ead6,#cbbd9c);color:#2a1f17;font-weight:700;font-size:13px;box-shadow:0 3px 0 #8b7d60,inset 0 1px 0 #fff}
+.pad button:active{transform:translateY(2px);box-shadow:0 1px 0 #8b7d60}
+.zap{width:100%;max-width:126px;padding:9px 0 11px;border-radius:9px;background:linear-gradient(#ff9a4d,var(--orange));color:#2a1208;font-family:Bungee;font-size:15px;box-shadow:0 4px 0 #8a3a0e,inset 0 1px 0 #ffd2a8}
+.zap:active{transform:translateY(3px);box-shadow:0 1px 0 #8a3a0e}
+.grille{width:112px;height:64px;border-radius:10px;background:radial-gradient(circle,#2a241f 1.6px,transparent 2px) 0 0/8px 8px,#b7ad95;box-shadow:inset 0 2px 4px #0005}
+.power{display:flex;align-items:center;gap:6px;font-size:9.5px;letter-spacing:.2em;font-weight:700}
+.led{width:9px;height:9px;border-radius:50%;background:#ff3b30;box-shadow:0 0 8px #ff3b30,inset 0 -1px 2px #0006}
+.feet{display:flex;justify-content:space-between;padding:0 70px;margin-top:-4px}
+.feet span{width:44px;height:18px;background:linear-gradient(#2a1a0f,#140c06);border-radius:0 0 8px 8px}
+
+/* ===== guia em teletexto ===== */
+.guide{background:var(--tt-bg);border-radius:14px;border:10px solid #1b1714;box-shadow:0 0 0 2px #4d4136,0 20px 40px #000b;font-family:VT323,monospace;display:flex;flex-direction:column;max-height:calc(72vh + 120px);min-height:420px}
+.tthead{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--tt-c);color:#000;font-size:22px}
+.tthead .pg{background:#000;color:var(--tt-y);padding:0 6px}
+.ttsub{display:flex;justify-content:space-between;padding:4px 12px;color:var(--tt-y);font-size:19px;border-bottom:2px solid #222}
+.list{overflow-y:auto;flex:1;scrollbar-color:#444 #000}
+.item{display:grid;grid-template-columns:44px 84px 1fr;gap:10px;padding:7px 12px;cursor:pointer;align-items:center;border-bottom:1px solid #151515}
+.item:hover{background:#0d1a1a}
+.item.cur{background:#002b4d}
+.item .n{color:var(--tt-y);font-size:24px}
+.item img{width:84px;height:48px;object-fit:cover;filter:saturate(1.2) contrast(1.1);image-rendering:pixelated;border:1px solid #333}
+.item .t{color:var(--tt-w);font-size:19px;line-height:1;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .m{color:var(--tt-c);font-size:16px;margin-top:2px}
+.tag{display:inline-block;font-size:15px;padding:0 5px;margin:3px 4px 0 0;background:#222;color:var(--tt-g)}
+.tag.noemb{background:var(--tt-r);color:#000}
+.empty{padding:40px 20px;text-align:center;color:var(--tt-m);font-size:24px}
+.gfoot{padding:8px 12px;border-top:2px solid #222;display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:#9a9a9a;font-size:17px}
+.gfoot button{background:var(--tt-m);color:#000;padding:2px 10px;font-family:VT323;font-size:19px}
+.fastext{display:flex}
+.fastext span{flex:1;text-align:center;font-size:17px;padding:2px 0;color:#000}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- PAINEL DE FILTROS -->
+  <header class="panel">
+    <div class="ptop">
+      <div class="brand"><span>TV de <em>Lives</em></span><span class="badge">MOD. BR-77</span></div>
+      <input class="search" id="q" placeholder="Buscar canal ou título… ou digite o nº do canal e Enter" maxlength="80" aria-label="Buscar">
+    </div>
+    <div class="row"><span class="lbl">Plataforma</span><div class="keys" id="plats"></div></div>
+    <div class="row"><span class="lbl">Tema</span><div class="keys" id="cats"></div></div>
+    <div class="row"><span class="lbl">Audiência</span><div class="keys" id="sizes"></div>
+      <span class="lbl" style="width:auto;margin-left:8px">Ordem</span><div class="keys" id="sorts"></div></div>
+    <div class="active" id="active"></div>
+  </header>
+
+  <main class="room">
+    <!-- TELEVISÃO -->
+    <section>
+      <div class="tv">
+        <div class="tvbody">
+          <div>
+            <div class="bezel">
+              <div class="screen boot" id="screen">
+                <div id="player"></div>
+                <iframe id="ext" title="Player" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                <div class="empty-tv" id="emptyTv" style="display:none"></div>
+                <div class="fallback" id="fallback">
+                  <div><b id="fbTitle"></b><p id="fbMeta"></p></div>
+                  <div><p>Este canal não libera a live fora da plataforma.</p><a class="btn-plat" id="fbLink" target="_blank" rel="noopener noreferrer">▶ Assistir na plataforma</a></div>
+                </div>
+                <div class="static" id="static"></div>
+                <div class="osd" id="osd"><div class="chnum" id="osdNum">000</div><div class="osdbox"><b id="osdCh"></b><span id="osdTitle"></span></div></div>
+                <div class="scan"></div><div class="vignette"></div><div class="glare"></div>
+              </div>
+            </div>
+            <div class="plate">
+              <span class="now" id="nowMeta">Sintonizando…</span>
+              <a id="openExt" target="_blank" rel="noopener noreferrer">Abrir na plataforma ↗</a>
+            </div>
+          </div>
+
+          <aside class="controls" aria-label="Controles da TV">
+            <div class="power"><span class="led"></span>LIGADA</div>
+            <div class="knobwrap">
+              <span class="clabel">Canal</span>
+              <div class="knob" id="knob" role="button" tabindex="0" aria-label="Seletor de canal: clique à esquerda para voltar, à direita para avançar"></div>
+              <div class="knobbtns"><button class="mini" id="prev" title="Canal anterior (↑)">◀</button><button class="mini" id="next" title="Próximo canal (↓)">▶</button></div>
+            </div>
+            <div>
+              <div class="clabel" style="margin-bottom:6px">Sintonia direta</div>
+              <div class="pad" id="pad">
+                <button>1</button><button>2</button><button>3</button>
+                <button>4</button><button>5</button><button>6</button>
+                <button>7</button><button>8</button><button>9</button>
+                <button data-k="clr">C</button><button>0</button><button data-k="ok">OK</button>
+              </div>
+            </div>
+            <button class="zap" id="zap" title="Canal aleatório (Z)">ZAPEAR</button>
+            <div class="grille" aria-hidden="true"></div>
+          </aside>
+        </div>
+      </div>
+      <div class="feet" aria-hidden="true"><span></span><span></span></div>
+    </section>
+
+    <!-- GUIA (TELETEXTO) -->
+    <aside class="guide">
+      <div class="tthead"><span>GUIA DE PROGRAMAÇÃO</span><span class="pg">P100</span></div>
+      <div class="ttsub"><span><span id="count">0</span> CANAIS NO AR</span><span id="updated"></span></div>
+      <div class="list" id="list"></div>
+      <div class="fastext"><span style="background:var(--tt-r)">YOUTUBE</span><span style="background:var(--tt-m)">TWITCH</span><span style="background:var(--tt-g)">KICK</span><span style="background:var(--tt-y)">ATUALIZA 20 MIN</span></div>
+      <div class="gfoot"><button id="exportCsv">⬇ CATÁLOGO CSV</button><span>Ao vivo no Brasil · YouTube, Twitch e Kick</span></div>
+    </aside>
+  </main>
+</div>
+
+<script>
+'use strict';
+// Sem chaves neste arquivo: a coleta roda no GitHub Actions e publica JSON no branch "data".
+const DATA = 'https://raw.githubusercontent.com/eduardomontsm/tv-de-lives/data/';
+const PLAT = {yt:'YouTube',tw:'Twitch',kk:'Kick'};
+const ICON={'Esportes':'⚽','Futebol':'🥅','Games':'🎮','Música':'🎵','Entretenimento':'🎬','Notícias':'📰','Educação':'📚','Ciência e Tecnologia':'🔬','Ciência':'🧬','Pessoas e Blogs':'🎙️','Podcasts':'🎧','Papo':'💬','Humor':'😂','Estilo e Culinária':'🍳','Animais e Natureza':'🌿','Viagem':'✈️','Fofoca':'🗞️','Religião':'🙏','Rádio 24h':'📻','Política':'🏛️','Economia':'📈','Reality':'🏠','React':'👀','Infantil':'🧸','Câmeras 24h':'📹','Filmes e Animação':'🎞️','Carros':'🚗','Causas':'🤝','Arte':'🎨','IRL':'📍','Twitch':'🟣'};
+const SIZES=[['Todas',0,Infinity],['Até 50',0,51],['50–500',51,501],['500–5 mil',501,5001],['+5 mil',5001,Infinity]];
+const SORTS=[['viewers','Mais vistos'],['small','Menores'],['recent','Recentes'],['random','Aleatório']];
+const ID_RE={yt:/^[\w-]{11}$/,tw:/^[a-z0-9_]{2,25}$/,kk:/^[a-z0-9_-]{1,40}$/};
+
+let lives=[],updatedAt=0;
+let state={plat:'all',cat:'Todas',size:0,sort:'viewers',q:''};
+let view=[],cur=-1,player=null,playerReady=false,pending=null,knobDeg=0;
+
+const $=id=>document.getElementById(id);
+const fmt=n=>n==null||n<0?'—':n>=1e6?(n/1e6).toFixed(n>=1e7?0:1).replace('.',',')+' mi':n>=1e3?(n>=1e4?Math.round(n/1e3):(n/1e3).toFixed(1).replace('.',','))+' mil':String(n);
+const esc=s=>String(s??'').replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));
+const safeImg=u=>/^https:\/\/([a-z0-9-]+\.)*(ytimg\.com|ggpht\.com|jtvnw\.net|kick\.com)\//i.test(u||'')?u:'';
+const ago=t=>{const m=Math.round((Date.now()-t)/6e4);return m<1?'AGORA':m<60?`HÁ ${m} MIN`:`HÁ ${Math.round(m/60)} H`};
+const watchUrl=l=>l.p==='yt'?`https://www.youtube.com/watch?v=${l.id}`:l.p==='tw'?`https://www.twitch.tv/${l.id}`:`https://kick.com/${l.id}`;
+
+// só aceita registros bem-formados (defesa extra contra dados adulterados)
+function clean(arr){return (Array.isArray(arr)?arr:[]).filter(l=>l&&PLAT[l.p]&&ID_RE[l.p].test(String(l.id))).map(l=>({p:l.p,id:String(l.id),ch:String(l.ch||''),chTitle:String(l.chTitle||'').slice(0,100),title:String(l.title||'').slice(0,200),tags:(Array.isArray(l.tags)?l.tags:[]).map(String).slice(0,6),game:String(l.game||'').slice(0,80),viewers:Math.max(0,+l.viewers||0),subs:l.subs==null?null:Math.max(0,+l.subs||0),embed:l.embed!==false,start:String(l.start||''),thumb:safeImg(l.thumb)}))}
+
+async function load(){
+  try{const r=await fetch(DATA+'lives.json?t='+Math.floor(Date.now()/6e4),{cache:'no-store'});if(!r.ok)throw 0;const j=await r.json();lives=clean(j.lives);updatedAt=+j.updatedAt||0}catch(e){}
+  build();
+}
+
+const tagsOf=l=>l.tags.length?l.tags:['Outros'];
+function build(){
+  const base=lives.filter(l=>state.plat==='all'||l.p===state.plat);
+  const counts={};base.forEach(l=>tagsOf(l).forEach(t=>counts[t]=(counts[t]||0)+1));
+  if(state.cat!=='Todas'&&!counts[state.cat])state.cat='Todas';
+  const pc={all:lives.length};lives.forEach(l=>pc[l.p]=(pc[l.p]||0)+1);
+  $('plats').innerHTML=[['all','Todas'],...Object.entries(PLAT)].map(([k,n])=>`<button class="key ${k===state.plat?'on':''}" data-p="${k}">${k==='all'?'':`<span class="pdot p-${k}"></span>`}${n}<span class="c">${pc[k]||0}</span></button>`).join('');
+  const cats=['Todas',...Object.keys(counts).sort((a,b)=>counts[b]-counts[a])];
+  $('cats').innerHTML=cats.map(c=>`<button class="key ${c===state.cat?'on':''}" data-c="${esc(c)}">${c==='Todas'?'📺 Todos':(ICON[c]||'•')+' '+esc(c)}<span class="c">${c==='Todas'?base.length:counts[c]}</span></button>`).join('');
+  $('sizes').innerHTML=SIZES.map((s,i)=>`<button class="key ${i===state.size?'on':''}" data-s="${i}">${s[0]}</button>`).join('');
+  $('sorts').innerHTML=SORTS.map(([k,n])=>`<button class="key ${k===state.sort?'on':''}" data-o="${k}">${n}</button>`).join('');
+  $('updated').textContent=updatedAt?`ATUALIZADA ${ago(updatedAt)}`:'';
+  render();
+}
+function render(){
+  const [sizeName,lo,hi]=SIZES[state.size];const q=state.q.toLowerCase();const playing=view[cur]?view[cur].p+view[cur].id:null;
+  view=lives.filter(l=>(state.plat==='all'||l.p===state.plat)&&(state.cat==='Todas'||tagsOf(l).includes(state.cat))&&l.viewers>=lo&&l.viewers<hi&&(!q||/^\d+$/.test(q)||(l.title+' '+l.chTitle+' '+l.game).toLowerCase().includes(q)));
+  const s=state.sort;
+  if(s==='viewers')view.sort((a,b)=>b.viewers-a.viewers);
+  if(s==='small')view.sort((a,b)=>a.viewers-b.viewers);
+  if(s==='recent')view.sort((a,b)=>b.start.localeCompare(a.start));
+  if(s==='random')for(let i=view.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[view[i],view[j]]=[view[j],view[i]]}
+  $('count').textContent=view.length;
+  const act=[];if(state.plat!=='all')act.push(`<b>${PLAT[state.plat]}</b>`);if(state.cat!=='Todas')act.push(`tema <b>${esc(state.cat)}</b>`);if(state.size)act.push(`audiência <b>${sizeName}</b> pessoas`);if(state.q&&!/^\d+$/.test(state.q))act.push(`busca <b>“${esc(state.q)}”</b>`);
+  $('active').innerHTML=act.length?`Sintonizado em ${act.join(' · ')} → <b>${view.length}</b> canais <button class="clear" id="clearF">limpar filtros</button>`:`<span>${lives.length} lives brasileiras no ar no YouTube, Twitch e Kick. Aperte as teclas acima para filtrar.</span>`;
+  $('list').innerHTML=view.length?view.map((l,i)=>`<div class="item ${l.p+l.id===playing?'cur':''}" data-i="${i}">
+    <div class="n">${String(i+1).padStart(3,'0')}</div>
+    <img loading="lazy" src="${esc(l.thumb)}" alt="" referrerpolicy="no-referrer">
+    <div><div class="t">${esc(l.title)}</div><div class="m"><span class="pdot p-${l.p}"></span>${esc(l.chTitle)}${l.subs!=null?` · ${fmt(l.subs)} inscr.`:''} · ${fmt(l.viewers)} vendo</div>
+    <div>${tagsOf(l).slice(0,2).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}${l.game&&!tagsOf(l).includes(l.game)?`<span class="tag">${esc(l.game)}</span>`:''}${l.embed?'':'<span class="tag noemb">SÓ NA PLATAFORMA</span>'}</div></div></div>`).join('')
+    :`<div class="empty">${lives.length?'NENHUM CANAL COM ESSES FILTROS':'CARREGANDO PROGRAMAÇÃO…'}</div>`;
+  cur=playing?view.findIndex(v=>v.p+v.id===playing):-1;
+  $('emptyTv').style.display=lives.length?'none':'flex';$('emptyTv').textContent=lives.length?'':'FORA DO AR · A PROGRAMAÇÃO VOLTA EM INSTANTES';
+}
+
+let osdT;
+function osd(num,ch,title){$('osdNum').textContent=num;$('osdCh').textContent=ch;$('osdTitle').textContent=title;$('osd').classList.add('show');clearTimeout(osdT);osdT=setTimeout(()=>$('osd').classList.remove('show'),3500)}
+function turnKnob(dir){knobDeg+=dir*30;$('knob').style.transform=`rotate(${knobDeg}deg)`}
+function tune(i){
+  if(!view.length)return;cur=(i+view.length)%view.length;const l=view[cur];
+  $('static').classList.add('on');setTimeout(()=>$('static').classList.remove('on'),420);
+  osd(String(cur+1).padStart(3,'0'),`${l.chTitle} · ${PLAT[l.p]}`,`${l.title} · ${fmt(l.viewers)} vendo`);
+  $('nowMeta').innerHTML=`<span class="pdot p-${l.p}"></span>CH ${String(cur+1).padStart(3,'0')} · ${esc(l.chTitle)} · ${PLAT[l.p]}${l.subs!=null?' · '+fmt(l.subs)+' inscritos':''}`;
+  $('openExt').href=watchUrl(l);$('openExt').textContent=`Abrir no ${PLAT[l.p]} ↗`;
+  document.querySelectorAll('.item').forEach(e=>e.classList.toggle('cur',+e.dataset.i===cur));
+  document.querySelector(`.item[data-i="${cur}"]`)?.scrollIntoView({block:'nearest'});
+  $('fallback').classList.remove('on');
+  if(!l.embed)return showFallback(l);
+  if(l.p==='yt'){
+    setExt('');
+    if(playerReady)player.loadVideoById(l.id);else pending=l.id;
+  }else{
+    if(playerReady)player.stopVideo();
+    const host=location.hostname||'eduardomontsm.github.io';
+    setExt(l.p==='tw'?`https://player.twitch.tv/?channel=${encodeURIComponent(l.id)}&parent=${encodeURIComponent(host)}&autoplay=true`:`https://player.kick.com/${encodeURIComponent(l.id)}?autoplay=true`);
+  }
+}
+const step=d=>{turnKnob(d);tune(cur+d)};
+function setExt(src){const f=$('ext');if(!src){f.style.display='none';f.removeAttribute('src');return}f.src=src;f.style.display='block'}
+function showFallback(l){if(playerReady)player.stopVideo();setExt('');const f=$('fallback');f.classList.add('on');f.style.backgroundImage=l.thumb?`url("${l.thumb.replace(/"/g,'')}")`:'';$('fbTitle').textContent=l.chTitle;$('fbMeta').textContent=l.title;$('fbLink').href=watchUrl(l);$('fbLink').textContent=`▶ Assistir no ${PLAT[l.p]}`}
+window.onYouTubeIframeAPIReady=()=>{player=new YT.Player('player',{playerVars:{autoplay:1,playsinline:1,rel:0},events:{
+  onReady:()=>{playerReady=true;if(pending&&view[cur]?.p==='yt')player.loadVideoById(pending)},
+  onError:e=>{const l=view[cur];if(!l||l.p!=='yt')return;if([101,150,153].includes(e.data)){l.embed=false;showFallback(l);render()}else setTimeout(()=>tune(cur+1),800)}}})};
+
+// teclado numérico: acumula dígitos e sintoniza
+let typed='',typedT;
+function digit(d){typed=(typed+d).slice(-3);osd(typed.padStart(3,'-'),'SINTONIA DIRETA','');clearTimeout(typedT);typedT=setTimeout(commit,1400)}
+function commit(){clearTimeout(typedT);if(typed){const n=+typed-1;typed='';if(n>=0&&n<view.length)tune(n);else osd('---','CANAL INEXISTENTE',`Há ${view.length} canais com esses filtros`)}}
+$('pad').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.k==='ok')return commit();if(b.dataset.k==='clr'){typed='';clearTimeout(typedT);return osd('---','','')}digit(b.textContent)};
+
+$('plats').onclick=e=>{const b=e.target.closest('[data-p]');if(b){state.plat=b.dataset.p;build()}};
+$('cats').onclick=e=>{const b=e.target.closest('[data-c]');if(b){state.cat=b.dataset.c;build()}};
+$('sizes').onclick=e=>{const b=e.target.closest('[data-s]');if(b){state.size=+b.dataset.s;build()}};
+$('sorts').onclick=e=>{const b=e.target.closest('[data-o]');if(b){state.sort=b.dataset.o;build()}};
+$('active').onclick=e=>{if(e.target.id==='clearF'){state={...state,plat:'all',cat:'Todas',size:0,q:''};$('q').value='';build()}};
+$('q').oninput=e=>{state.q=e.target.value.trim();render()};
+$('q').onkeydown=e=>{if(e.key==='Enter'&&/^\d+$/.test(state.q)){const n=+state.q-1;e.target.value='';state.q='';render();tune(n)}};
+$('list').onclick=e=>{const it=e.target.closest('.item');if(it)tune(+it.dataset.i)};
+$('prev').onclick=()=>step(-1);$('next').onclick=()=>step(1);
+$('knob').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();step(e.clientX<r.left+r.width/2?-1:1)};
+$('knob').onkeydown=e=>{if(e.key==='ArrowLeft')step(-1);if(e.key==='ArrowRight'||e.key==='Enter')step(1)};
+$('zap').onclick=()=>{turnKnob(2);tune(Math.random()*view.length|0)};
+$('exportCsv').onclick=async()=>{
+  let ch={};try{const r=await fetch(DATA+'catalog.json?t='+Date.now(),{cache:'no-store'});ch=(await r.json()).channels||{}}catch(e){}
+  const url=c=>c.p==='yt'?'https://www.youtube.com/channel/'+c.id:c.p==='tw'?'https://www.twitch.tv/'+c.id:'https://kick.com/'+c.id;
+  // prefixo ' evita fórmulas maliciosas ao abrir no Excel/Sheets
+  const cell=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return `"${s.replace(/"/g,'""')}"`};
+  const rows=[['plataforma','id','nome','inscritos','pico_de_audiencia','temas','vezes_visto_ao_vivo','url']].concat(Object.values(ch).map(c=>[PLAT[c.p]||c.p,c.id,c.name,c.subs??'',c.peak||'',(c.tags||[]).join(' | '),c.seen||0,url(c)]));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+rows.map(r=>r.map(cell).join(',')).join('\n')],{type:'text/csv'}));a.download='catalogo-tv-de-lives.csv';a.click();
+};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;
+  if(e.key==='ArrowUp'){e.preventDefault();step(-1)}if(e.key==='ArrowDown'){e.preventDefault();step(1)}
+  if(e.key==='z'){turnKnob(2);tune(Math.random()*view.length|0)}
+  if(/^\d$/.test(e.key))digit(e.key);if(e.key==='Enter'&&typed)commit()});
+let ty=null;const scr=$('screen');
+scr.addEventListener('touchstart',e=>ty=e.touches[0].clientY,{passive:true});
+scr.addEventListener('touchend',e=>{if(ty==null)return;const d=e.changedTouches[0].clientY-ty;if(Math.abs(d)>60)step(d<0?1:-1);ty=null});
+setTimeout(()=>scr.classList.remove('boot'),900);
+
+// limpa dados antigos do protótipo (chave/token) que possam ter ficado neste navegador
+try{Object.keys(localStorage).filter(k=>k.startsWith('tvl_')).forEach(k=>localStorage.removeItem(k))}catch(e){}
+load().then(()=>{if(view.length)tune(0)});
+setInterval(load,5*60e3);
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
