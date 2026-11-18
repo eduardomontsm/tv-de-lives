@@ -1,4 +1,4 @@
-// TV de Lives — coletor de lives brasileiras (YouTube + Twitch + Kick)
+// TV de Tubo — coletor de lives brasileiras (YouTube + Twitch + Kick)
 // Roda no GitHub Actions. Lê a programação anterior de ./prev e grava a nova em ./out.
 // Segredos chegam só por variáveis de ambiente e nunca são impressos.
 // Uso: node scripts/scan.mjs <pastaAnterior> <pastaSaida>
