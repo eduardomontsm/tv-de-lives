@@ -100,11 +100,16 @@ async function scanTwitch() {
   if (!TW_ID || !TW_SECRET) { log('Twitch: sem credenciais'); return null; }
   const tok = await getJSON('https://id.twitch.tv/oauth2/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: TW_ID, client_secret: TW_SECRET, grant_type: 'client_credentials' }) });
   const H = { 'Client-Id': TW_ID, Authorization: `Bearer ${tok.access_token}` };
-  const out = []; let cursor = '';
-  for (let page = 0; page < 5; page++) {                    // até 500 lives em português, das mais vistas
+  const out = [], seen = new Set(); let cursor = '';
+  // A Twitch devolve das mais vistas para as menos vistas; para chegar aos canais
+  // pequenos é preciso paginar fundo. Até 25 páginas (2.500 lives), ~25 pontos do
+  // limite de 800/min do token de app.
+  for (let page = 0; page < 25; page++) {
     const r = await getJSON('https://api.twitch.tv/helix/streams?' + new URLSearchParams({ language: 'pt', type: 'live', first: '100', ...(cursor ? { after: cursor } : {}) }), { headers: H });
     for (const s of r.data || []) {
       const login = okId(s.user_login, /^[a-z0-9_]{2,25}$/i); if (!login) continue;
+      if (seen.has(login.toLowerCase())) continue;   // a ordem muda entre páginas e pode repetir canal
+      seen.add(login.toLowerCase());
       const game = str(s.game_name, 80), title = str(s.title);
       if (isGambling(game, title)) continue;
       out.push({ p: 'tw', id: login.toLowerCase(), ch: str(s.user_id, 20), chTitle: str(s.user_name, 60), title, tags: [twitchTag(game)].filter(Boolean), game, viewers: int(s.viewer_count), subs: null, embed: true, start: str(s.started_at, 30), thumb: img(String(s.thumbnail_url || '').replace('{width}', '320').replace('{height}', '180')) });
@@ -137,13 +142,21 @@ function twitchTag(game) {
 async function scanKick() {
   if (!KK_ID || !KK_SECRET) { log('Kick: sem credenciais'); return null; }
   const tok = await getJSON('https://id.kick.com/oauth/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ client_id: KK_ID, client_secret: KK_SECRET, grant_type: 'client_credentials' }) });
-  const r = await getJSON('https://api.kick.com/public/v1/livestreams?' + new URLSearchParams({ language: 'pt', limit: '100', sort: 'viewer_count' }), { headers: { Authorization: `Bearer ${tok.access_token}`, Accept: 'application/json' } });
-  const out = [];
-  for (const s of r.data || []) {
+  const H = { headers: { Authorization: `Bearer ${tok.access_token}`, Accept: 'application/json' } };
+  const url = (sort) => 'https://api.kick.com/public/v1/livestreams?' + new URLSearchParams({ language: 'pt', limit: '100', sort });
+  // A API pública não pagina: 100 mais vistas + 100 que começaram por último
+  // (a segunda lista traz os canais pequenos). Se a segunda falhar, segue com a primeira.
+  const top = await getJSON(url('viewer_count'), H);
+  let fresh = { data: [] };
+  try { fresh = await getJSON(url('started_at'), H); } catch (e) { log('Kick (recentes) falhou:', e.message); }
+  const out = [], seen = new Set();
+  for (const s of [...(top.data || []), ...(fresh.data || [])]) {
     const slug = okId(s.slug, /^[a-z0-9_-]{1,40}$/i); if (!slug) continue;
+    const id = slug.toLowerCase(); if (seen.has(id)) continue;
     const cat = str(s.category?.name, 80), title = str(s.stream_title);
     if (s.has_mature_content || isGambling(cat, title)) continue;
-    out.push({ p: 'kk', id: slug.toLowerCase(), ch: str(s.broadcaster_user_id, 20), chTitle: str(slug, 60), title, tags: [twitchTag(cat)].filter(Boolean), game: cat, viewers: int(s.viewer_count), subs: null, embed: true, start: str(s.started_at, 30), thumb: img(s.thumbnail) });
+    seen.add(id);
+    out.push({ p: 'kk', id, ch: str(s.broadcaster_user_id, 20), chTitle: str(slug, 60), title, tags: [twitchTag(cat)].filter(Boolean), game: cat, viewers: int(s.viewer_count), subs: null, embed: true, start: str(s.started_at, 30), thumb: img(s.thumbnail) });
   }
   log(`Kick: ${out.length} lives em português`);
   return out;
