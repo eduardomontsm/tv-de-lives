@@ -7,7 +7,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0a0a0a">
 <meta name="description" content="Lives brasileiras ao vivo no YouTube, Twitch e Kick, como uma TV: troque de canal, zapeie e filtre por plataforma, tema e tamanho do canal.">
-<title>TV de Lives</title>
+<title>TV de Tubo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -144,7 +144,7 @@ body.guide-open .guide{transform:none}
 <body>
 <a class="skip" href="#remote">Pular para o controle</a>
 <header class="bar">
-  <h1 class="brand" translate="no">TV DE LIVES</h1>
+  <h1 class="brand" translate="no">TV DE TUBO</h1>
   <span class="upd" id="updated" aria-live="polite"></span>
   <label class="sr" for="q">Buscar canal ou título</label>
   <input class="search" id="q" name="q" type="search" placeholder="Buscar canal ou título…" maxlength="80" autocomplete="off" spellcheck="false" enterkeyhint="search">
@@ -348,7 +348,7 @@ $('exportCsv').onclick=async()=>{
   // prefixo ' evita fórmulas maliciosas ao abrir no Excel/Sheets
   const cell=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return `"${s.replace(/"/g,'""')}"`};
   const rows=[['plataforma','id','nome','inscritos','pico_de_audiencia','temas','vezes_visto_ao_vivo','url']].concat(Object.values(ch).map(c=>[PLAT[c.p]||c.p,c.id,c.name,c.subs??'',c.peak||'',(c.tags||[]).join(' | '),c.seen||0,url(c)]));
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+rows.map(r=>r.map(cell).join(',')).join('\n')],{type:'text/csv'}));a.download='catalogo-tv-de-lives.csv';a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+rows.map(r=>r.map(cell).join(',')).join('\n')],{type:'text/csv'}));a.download='catalogo-tv-de-tubo.csv';a.click();
 };
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&document.body.classList.contains('guide-open'))return setGuide(false);
