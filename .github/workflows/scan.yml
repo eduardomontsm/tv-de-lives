@@ -2,7 +2,7 @@ name: Coletar lives
 
 on:
   schedule:
-    - cron: "*/20 * * * *"        # a cada 20 min (o GitHub pode atrasar alguns minutos)
+    - cron: "7,27,47 * * * *"     # a cada 20 min, fora dos minutos "redondos" (menos atraso no GitHub)
   workflow_dispatch:               # só quem tem acesso de escrita ao repositório consegue rodar
     inputs:
       extra_youtube_searches:
