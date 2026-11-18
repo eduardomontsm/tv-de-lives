@@ -1,0 +1,59 @@
+name: Coletar lives
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"        # a cada 20 min (o GitHub pode atrasar alguns minutos)
+  workflow_dispatch:               # só quem tem acesso de escrita ao repositório consegue rodar
+    inputs:
+      extra_youtube_searches:
+        description: "Buscas extras no YouTube nesta rodada (0–40; a cota é ~100 por dia)"
+        required: false
+        default: "0"
+
+permissions: {}                    # nada por padrão
+
+concurrency:
+  group: coletar-lives
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write              # única permissão: gravar o branch "data"
+    steps:
+      - name: Baixar o código (sem guardar credenciais)
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09   # v5.1.0
+        with:
+          persist-credentials: false
+
+      - name: Ler programação anterior
+        run: |
+          mkdir -p prev
+          for f in lives.json catalog.json; do
+            curl -fsS "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/data/$f" -o "prev/$f" || true
+          done
+
+      - name: Coletar
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+          KICK_CLIENT_ID: ${{ secrets.KICK_CLIENT_ID }}
+          KICK_CLIENT_SECRET: ${{ secrets.KICK_CLIENT_SECRET }}
+          EXTRA_YT_SEARCHES: ${{ github.event.inputs.extra_youtube_searches || '0' }}
+        run: node scripts/scan.mjs prev out
+
+      - name: Publicar no branch "data"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          git init -q -b data
+          git config user.name "tv-de-lives-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lives.json catalog.json
+          git commit -qm "programação $(date -u +%FT%TZ)"
+          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c http.extraheader="AUTHORIZATION: basic $AUTH" push -qf "https://github.com/${GITHUB_REPOSITORY}.git" data
