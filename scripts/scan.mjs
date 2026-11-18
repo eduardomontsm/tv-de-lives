@@ -10,6 +10,7 @@ const env = (k) => (process.env[k] || '').trim();
 const YT_KEY = env('YT_API_KEY');
 const TW_ID = env('TWITCH_CLIENT_ID'), TW_SECRET = env('TWITCH_CLIENT_SECRET');
 const KK_ID = env('KICK_CLIENT_ID'), KK_SECRET = env('KICK_CLIENT_SECRET');
+const RSS_MAX = 400;                       // canais do catálogo conferidos por rodada
 const EXTRA_YT = Math.max(0, Math.min(40, parseInt(env('EXTRA_YT_SEARCHES') || '0', 10) || 0));
 
 const log = (...a) => console.log('[scan]', ...a);
@@ -66,6 +67,32 @@ async function scanYouTube(prevLives, catalog) {
       log(`YouTube busca "${tag}": ${r.items?.length || 0}`);
     } catch (e) { log('YouTube busca falhou:', e.message); if (/quota/i.test(e.message)) break; }
   }
+  // Canais do catálogo: o feed público de cada canal (sem custo de cota) lista os
+  // vídeos mais recentes, inclusive a live em andamento. Só os IDs novos vão para
+  // videos.list (1 unidade a cada 50). Assim o YouTube cresce sem gastar buscas.
+  const tracked = new Set([...found.values()].map((f) => f.ch));
+  const cands = Object.values(catalog)
+    .filter((c) => c.p === 'yt' && okId(c.id, /^UC[\w-]{22}$/) && !tracked.has(c.id))
+    .sort((a, b) => (b.lastLive || 0) - (a.lastLive || 0))
+    .slice(0, RSS_MAX);
+  let rssOk = 0, rssFail = 0;
+  const week = 7 * 864e5;
+  for (let i = 0; i < cands.length; i += 12) {
+    await Promise.all(cands.slice(i, i + 12).map(async (c) => {
+      try {
+        const r = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${c.id}`, { signal: AbortSignal.timeout(10000) });
+        if (!r.ok) { rssFail++; return; }
+        const xml = (await r.text()).slice(0, 200000); rssOk++;
+        for (const e of xml.split('<entry>').slice(1, 3)) {          // 2 vídeos mais recentes
+          const id = okId((e.match(/<yt:videoId>([^<]+)<\/yt:videoId>/) || [])[1], /^[\w-]{11}$/);
+          const pub = Date.parse((e.match(/<published>([^<]+)<\/published>/) || [])[1] || '');
+          if (!id || found.has(id) || !(now - pub < week)) continue;
+          found.set(id, { id, ch: c.id, tags: new Set(), viaFeed: true });
+        }
+      } catch { rssFail++; }
+    }));
+  }
+  if (cands.length) log(`YouTube feeds: ${rssOk} canais lidos, ${rssFail} falhas, ${[...found.values()].filter((f) => f.viaFeed).length} vídeos a conferir`);
   const items = [...found.values()]; const ids = items.map((f) => f.id); const det = new Map();
   for (let i = 0; i < ids.length; i += 50) {
     const r = await yt('videos', { part: 'snippet,status,liveStreamingDetails', id: ids.slice(i, i + 50).join(',') });
@@ -177,7 +204,21 @@ const [ytL, twL, kkL] = await Promise.all([
 ]);
 // Se uma plataforma falhar, mantém as lives anteriores dela (no máximo 1 h)
 const keep = (p, list) => list ?? prevLives.filter((l) => l.p === p && now - (prev.updatedAt || 0) < 36e5);
-const lives = [...keep('yt', ytL), ...keep('tw', twL), ...keep('kk', kkL)];
+// Proporção da programação: 60% YouTube, 20% Twitch, 20% Kick.
+// Twitch e Kick ficam com até 1/3 do total do YouTube cada (mínimo 20), escolhendo
+// metade entre as mais vistas e o resto espalhado do meio até as menores.
+const ytFinal = keep('yt', ytL);
+const cap = Math.max(20, Math.ceil(ytFinal.length / 3));
+function mix(list) {
+  const s = [...list].sort((a, b) => b.viewers - a.viewers);
+  if (s.length <= cap) return s;
+  const top = Math.ceil(cap / 2), rest = s.slice(top), k = cap - top, pick = s.slice(0, top);
+  for (let i = 0; i < k; i++) pick.push(rest[Math.round(((i + 1) * (rest.length - 1)) / k)]);
+  return [...new Set(pick)];
+}
+const twFinal = mix(keep('tw', twL)), kkFinal = mix(keep('kk', kkL));
+log(`Proporção: YouTube ${ytFinal.length} · Twitch ${twFinal.length} · Kick ${kkFinal.length} (teto ${cap})`);
+const lives = [...ytFinal, ...twFinal, ...kkFinal];
 
 // Catálogo acumulado de canais brasileiros, de todas as plataformas
 for (const l of lives) {
