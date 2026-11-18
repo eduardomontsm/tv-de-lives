@@ -119,14 +119,17 @@ async function scanTwitch() {
 function twitchTag(game) {
   const g = game.toLowerCase();
   if (!g) return 'Twitch';
+  // nomes exatos das categorias "não-jogo" da Twitch/Kick; todo o resto é jogo
   if (g === 'just chatting') return 'Papo';
-  if (/music|música/.test(g)) return 'Música';
-  if (/sports|soccer|futebol|fifa|ea sports fc/.test(g)) return 'Esportes';
-  if (/talk shows|podcast/.test(g)) return 'Podcasts';
-  if (/science|technology/.test(g)) return 'Ciência e Tecnologia';
-  if (/food|drink/.test(g)) return 'Estilo e Culinária';
-  if (/travel|outdoors|irl/.test(g)) return 'Viagem';
-  if (/art|makers/.test(g)) return 'Arte';
+  if (g === 'irl') return 'IRL';
+  if (/^(music|música)$|^dj$/.test(g)) return 'Música';
+  if (/^(sports|soccer|futebol|basketball|mma|motorsport)$|^ea sports fc|^fifa/.test(g)) return 'Esportes';
+  if (/^(talk shows & podcasts|podcasts?)$/.test(g)) return 'Podcasts';
+  if (/^science & technology$|^software and game development$/.test(g)) return 'Ciência e Tecnologia';
+  if (/^food & drink$/.test(g)) return 'Estilo e Culinária';
+  if (/^travel & outdoors$/.test(g)) return 'Viagem';
+  if (/^(art|makers & crafting)$/.test(g)) return 'Arte';
+  if (/^(politics|news|política)$/.test(g)) return 'Notícias';
   return 'Games';
 }
 
@@ -167,7 +170,9 @@ const lives = [...keep('yt', ytL), ...keep('tw', twL), ...keep('kk', kkL)];
 for (const l of lives) {
   const key = `${l.p}:${l.p === 'yt' ? l.ch : l.id}`;
   const c = catalog[key] || { p: l.p, id: l.p === 'yt' ? l.ch : l.id, name: l.chTitle };
-  c.name = l.chTitle || c.name; c.tags = [...new Set([...(c.tags || []), ...l.tags])].slice(0, 12);
+  c.name = l.chTitle || c.name;
+  // YouTube acumula temas das buscas; Twitch/Kick usam a categoria atual da live
+  c.tags = l.p === 'yt' ? [...new Set([...(c.tags || []), ...l.tags])].slice(0, 12) : l.tags.slice(0, 3);
   if (!c.lastLive || now - c.lastLive > 30 * 60e3) c.seen = (c.seen || 0) + 1;
   c.lastLive = now; c.peak = Math.max(c.peak || 0, l.viewers); catalog[key] = c;
 }
