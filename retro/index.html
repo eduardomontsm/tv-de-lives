@@ -65,24 +65,26 @@ a{color:inherit;text-decoration:none}
 /* controle remoto */
 .remote{width:var(--rw);flex-shrink:0;max-height:calc(100vh - var(--bar) - 30px);overflow-y:auto;scrollbar-width:none;
   background:linear-gradient(#1d1d1d,#151515);border-radius:26px 26px 34px 34px;padding:18px 16px 22px;
-  box-shadow:inset 0 1px 0 #ffffff12,inset 0 -2px 0 #0008,0 24px 50px #000a;display:flex;flex-direction:column;gap:16px}
+  box-shadow:inset 0 1px 0 #ffffff12,inset 0 -2px 0 #0008,0 24px 50px #000a;display:flex;flex-direction:column;gap:12px}
 .rtop{display:flex;justify-content:space-between;align-items:center}
 .ir{width:22px;height:8px;border-radius:4px;background:#2a1414;box-shadow:inset 0 0 4px #000}
 .rbrand{font-family:VT323;font-size:16px;letter-spacing:.12em;color:var(--mut)}
-.grp h3{font-size:10px;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);margin-bottom:8px}
+.grp h3{font-size:10px;font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
 .grp p{font-size:10.5px;color:var(--mut);margin-top:7px;line-height:1.4}
 .keys{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 .keys.k1{grid-template-columns:1fr}
-.k{background:#262626;color:#bdbab3;border-radius:7px;padding:7px 6px 8px;font-size:11.5px;text-align:center;line-height:1.15;
+.k{background:#262626;color:#bdbab3;border-radius:7px;padding:6px 6px 7px;font-size:11.5px;text-align:center;line-height:1.15;
   box-shadow:inset 0 1px 0 #ffffff14,0 2px 0 #050505;transition:transform .05s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .k:hover{color:var(--txt)}
 .k:active{transform:translateY(1px);box-shadow:inset 0 1px 0 #ffffff10,0 1px 0 #050505}
 .k.on{background:var(--txt);color:#111;box-shadow:0 2px 0 #050505}
 .k .c{opacity:.5;margin-left:4px}
-.themes{max-height:206px;overflow-y:auto;scrollbar-width:none}
+.themes{max-height:150px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.themes .k{white-space:normal;font-size:11px}
 .nav{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.nav .k{padding:10px 0;font-size:13px}
-.zap{grid-column:1/-1;font-family:VT323;font-size:20px;letter-spacing:.1em;padding:6px 0 7px}
+.nav{grid-template-columns:1fr 1fr 1.2fr}
+.nav .k{padding:8px 0;font-size:13px}
+.zap{font-family:VT323;font-size:19px;letter-spacing:.1em;padding:4px 0 5px!important}
 .clear{font-size:10.5px;color:var(--mut);text-decoration:underline;text-align:left}
 .clear:hover{color:var(--txt)}
 
